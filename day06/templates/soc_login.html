@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <title>SOC Analyst Login</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #101827;
+            color: #f8fafc;
+            font-family: Arial, sans-serif;
+        }
+
+        .login-card {
+            width: min(380px, 92vw);
+            padding: 32px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+        }
+
+        h1 { margin-bottom: 6px; font-size: 25px; }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #0d9488;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        #message {
+            margin-top: 16px;
+            color: #fca5a5;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <main class="login-card">
+        <h1>🛡 Robot Security SOC</h1>
+        <p class="subtitle">Secure Analyst Access</p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input
+                id="username"
+                type="text"
+                autocomplete="username"
+                maxlength="40"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button id="loginButton" type="submit">
+                Sign in securely
+            </button>
+        </form>
+
+        <p id="message" role="alert"></p>
+    </main>
+
+    <script>
+        const form = document.getElementById("loginForm");
+        const message = document.getElementById("message");
+        const button = document.getElementById("loginButton");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            button.disabled = true;
+            message.textContent = "";
+
+            try {
+                const response = await fetch(
+                    "/api/soc-auth/login",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            username: document.getElementById(
+                                "username"
+                            ).value,
+                            password: document.getElementById(
+                                "password"
+                            ).value
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    document.getElementById(
+                        "password"
+                    ).value = "";
+
+                    window.location.assign("/");
+                    return;
+                }
+
+                message.textContent =
+                    response.status === 429
+                        ? "Too many attempts. Try again later."
+                        : "Invalid username or password.";
+            } catch (error) {
+                message.textContent =
+                    "Authentication service unavailable.";
+            } finally {
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

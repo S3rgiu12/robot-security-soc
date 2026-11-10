@@ -1,0 +1,98 @@
+day06/.env.day13
+# Day 18 - SOC Analyst Authentication
+day18/auth/.env.auth
+day18/auth/analyst_users.db
+day18/auth/analyst_users.db-*
+# Python cache
+__pycache__/
+*.pyc
+
+# =========================================
+# Robot Security SOC - GitHub Safety
+# =========================================
+
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment variables and credentials
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Databases and runtime data
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Generated incident evidence
+day27/exports/
+day28/signatures/
+day28/keys/
+
+# Logs and packet captures
+*.log
+*.pcap
+*.pcapng
+
+# Temporary and backup files
+*.before_*
+*.bak
+*.tmp
+*.swp
+.gitignore.before_github
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# =========================================
+# GitHub Publication - Additional Safety
+# =========================================
+
+# JavaScript dependencies
+node_modules/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Additional backup files
+*.bak_*
+backup_soc/
+.gitignore.bak_*
+
+# Generated SOC runtime data
+day07/logs/
+day09/data/
+day10/evidence/
+day10/reports/
+day11/data/
+day12/data/
+day13/data/
+day14/data/
+day15/data/
+day16/data/
+day17/data/
+day21/data/
+
+# Runtime JSON and JSONL logs
+*.jsonl
+
+# Local test outputs
+coverage/
+htmlcov/
+.nyc_output/

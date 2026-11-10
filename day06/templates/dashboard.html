@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <title>{{ title | default('Robot Security SOC') }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/day26-incident-reports.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/day27-day28-security.css') }}">
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">⬡</span><span><strong>ROBOT SOC</strong><small>SECURITY OPERATIONS</small></span></a>
+    <div class="nav-caption">WORKSPACE</div>
+    <nav aria-label="Dashboard navigation">
+      <a href="#overview">◫ <span>Overview</span></a>
+      <a href="#system-health"><span class="nav-number">01</span><span>System Health</span></a>
+      <a href="#alerts"><span class="nav-number">02</span><span>Security Alerts</span></a>
+      <a href="#management"><span class="nav-number">03</span><span>Alert Lifecycle</span></a>
+      <a href="#notifications"><span class="nav-number">04</span><span>Notifications</span></a>
+      <a href="#incidents"><span class="nav-number">05</span><span>Incidents</span></a>
+      <a href="#history"><span class="nav-number">06</span><span>Event History</span></a>
+      <a href="#correlated-incidents"><span class="nav-number">07</span><span>Event Correlation</span></a>
+      <a href="#incident-investigation"><span class="nav-number">08</span><span>Investigations</span></a>
+      <a href="#day16-forensics"><span class="nav-number">09</span><span>Incident Forensics</span></a>
+      <a href="#day17-reports"><span class="nav-number">10</span><span>SOC Reports</span></a>
+      <a href="#day18-workflow"><span class="nav-number">11</span><span>Analyst Workflow</span></a>
+      <a href="#day20-prioritization"><span class="nav-number">12</span><span>Risk Prioritization</span></a>
+      <a href="#day21-threat-intelligence"><span class="nav-number">13</span><span>Threat Intelligence</span></a>
+      <a href="#day22-threat-alerts"><span class="nav-number">14</span><span>SOC Alert Queue</span></a>
+      <a href="#day23-investigations"><span class="nav-number">15</span><span>SOC Investigations</span></a>
+      <a href="#day24-threat-hunting"><span class="nav-number">16</span><span>Threat Hunting Timeline</span></a>
+      <a href="#day25-incident-response"><span class="nav-number">17</span><span>Incident Response</span></a>
+      <a href="#day26-incident-reports"><span class="nav-number">18</span><span>Incident Reports</span></a>
+      <a href="#day27-report-integrity"><span class="nav-number">19</span><span>Report Integrity</span></a>
+      <a href="#day28-digital-signature"><span class="nav-number">20</span><span>Digital Signatures</span></a>
+    </nav>
+    <div class="sidebar-bottom"><span class="sidebar-dot"></span>Local monitoring environment <small>Robot Security SOC · Local</small></div>
+  </aside>
+  <main class="dashboard" id="overview">
+    <header class="topbar"><div><span class="eyebrow">SECURITY MONITORING / OVERVIEW</span><h1>Robot Security Dashboard</h1><p class="muted">Industrial robotics intrusion detection & incident response</p></div><div class="topbar-right"><span class="live-pill"><span class="pulse"></span> LIVE MONITORING</span><span id="soc-clock" class="clock">--</span></div></header>
+    <div id="security-notification" class="security-notification" role="status" aria-live="polite" hidden></div>
+    <section class="metric-grid" aria-label="Security summary">
+      <article class="metric-card"><span class="metric-label">Security Alerts</span><strong id="alerts-total" class="metric-value">--</strong><span class="metric-sub">Recorded alerts · all severities</span><span class="metric-icon">◈</span></article>
+      <article class="metric-card"><span class="metric-label">Critical Alerts</span><strong id="alerts-critical" class="metric-value red">--</strong><span class="metric-sub">Historical critical events</span><span class="metric-icon">!</span></article>
+      <article class="metric-card"><span class="metric-label">New / Unreviewed</span><strong id="management-new" class="metric-value amber">--</strong><span class="metric-sub">Not necessarily active incidents</span><span class="metric-icon">◷</span></article>
+      <article class="metric-card"><span class="metric-label">Notifications</span><strong id="notifications-total" class="metric-value">--</strong><span class="metric-sub">Generated locally</span><span class="metric-icon">♧</span></article>
+      <article class="metric-card"><span class="metric-label">Open Incidents</span><strong id="incident-open-count" class="metric-value red">--</strong><span class="metric-sub">Incident registry</span><span class="metric-icon">⚑</span></article>
+      <article class="metric-card"><span class="metric-label">Recovery Events</span><strong id="recovery-count" class="metric-value green">{{ summary.recovery_count }}</strong><span class="metric-sub">IDS event history</span><span class="metric-icon">↻</span></article>
+    </section>
+    <section id="system-health" class="section-block"><div class="section-head"><div><span class="eyebrow">01 / LIVE STATUS</span><h2>System Health</h2></div><span class="section-description">Refreshed automatically every 5 seconds</span></div>
+      <div class="health-grid">
+        <article class="panel status-card"><div class="panel-heading"><h3>IDS Engine</h3><span class="pill subtle">DETECTION</span></div><p class="label">Last recorded IDS state</p><p id="ids-status" class="status {{ summary.status | lower }}">{{ summary.status }}</p><div class="detail-row"><span>API connection</span><strong id="api-connection">Checking...</strong></div><div class="detail-row"><span>Last successful update</span><strong id="last-update">Waiting...</strong></div><div class="detail-row"><span>Dashboard start</span><span id="dashboard-time">{{ current_time }}</span></div></article>
+        <article class="panel status-card"><div class="panel-heading"><h3>Heartbeat Monitor</h3><span class="pill subtle">AVAILABILITY</span></div><p class="label">Simulator availability</p><p id="heartbeat-status" class="heartbeat-unknown big-status">CHECKING...</p><div class="detail-row"><span>Heartbeat age</span><strong id="heartbeat-age">--</strong></div><div class="detail-row"><span>Monitor reason</span><span id="heartbeat-reason">Waiting for data...</span></div></article>
+        <article class="panel status-card"><div class="panel-heading"><h3>Automatic IDS Recovery</h3><span class="pill subtle">RESILIENCE</span></div><p class="label">IDS process state</p><p id="recovery-process-state" class="big-status">--</p>
+<div class="detail-row">
+    <span>Status freshness</span>
+    <strong id="recovery-freshness" class="freshness-unknown">CHECKING</strong>
+</div>
+<div class="detail-row">
+    <span>Last check age</span>
+    <strong id="recovery-status-age">--</strong>
+</div>
+<div class="detail-row">
+    <span>Freshness reason</span>
+    <span id="recovery-freshness-reason">Waiting for data...</span>
+</div>
+<div class="detail-row"><span>Recovery attempts</span><strong id="recovery-attempts">--</strong></div><div class="detail-row"><span>Restart blocked</span><strong id="recovery-blocked">--</strong></div><div class="detail-row"><span>Last result</span><strong id="recovery-last-result">--</strong></div><div class="detail-row"><span>Last recovery</span><span id="recovery-last-time">--</span></div><div class="detail-row"><span>Supervisor check</span><span id="recovery-supervisor-check">--</span></div><div class="api-line">Recovery API: <strong id="recovery-api-status">WAITING</strong></div></article>
+      </div>
+    </section>
+    <section id="alerts" class="section-block"><div class="section-head"><div><span class="eyebrow">02 / DETECTION</span><h2>Security Alerts</h2></div><span class="section-description">Historical alert log · not a live incident count</span></div>
+      <article class="panel" id="security-alerts-panel"><div class="mini-metrics"><div><span>Warning</span><strong id="alerts-warning" class="amber">--</strong></div><div><span>Info</span><strong id="alerts-info" class="green">--</strong></div><div><span>Total</span><strong class="mini-text">All event severities</strong></div></div><div class="panel-toolbar"><h3>Recent Security Events</h3><label class="search-wrap"><span class="sr-only">Filter visible security alerts</span><input id="soc-filter" type="search" placeholder="Filter visible events..."></label></div><div class="table-wrapper"><table><thead><tr><th>Timestamp</th><th>Severity</th><th>Event</th><th>Message</th></tr></thead><tbody id="security-alerts-table"><tr><td colspan="4">Loading alerts...</td></tr></tbody></table></div><div class="api-line">Alert API: <strong id="alerts-api-status">WAITING</strong></div></article>
+    </section>
+    <section id="management" class="section-block"><div class="section-head"><div><span class="eyebrow">03 / RESPONSE WORKFLOW</span><h2>Alert Lifecycle Management</h2></div></div>
+      <article class="panel" id="alert-management-panel"><p class="muted small">Review state is independent from current IDS availability. This interface is read-only; authenticated updates are available through the local API.</p><div class="lifecycle-grid"><div><span>NEW</span><strong id="management-new-secondary" class="amber">--</strong></div><div><span>ACKNOWLEDGED</span><strong id="management-acknowledged">--</strong></div><div><span>RESOLVED</span><strong id="management-resolved" class="green">--</strong></div><div><span>TOTAL</span><strong id="management-total">--</strong></div></div>
+<div class="panel-toolbar">
+    <h3>Analyst Alert Queue</h3>
+</div>
+
+<p class="muted small">
+    Select an alert to acknowledge or resolve.
+    Resolution requires explicit confirmation.
+</p>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Alert ID</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="management-alerts-table">
+            <tr>
+                <td colspan="5">Loading managed alerts...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<p id="management-action-message"
+   class="muted small"
+   role="status"
+   aria-live="polite"></p>
+
+<div class="api-line">Management API: <strong id="management-api-status">WAITING</strong></div></article>
+    </section>
+    <section id="notifications" class="section-block"><div class="section-head"><div><span class="eyebrow">04 / NOTIFICATIONS</span><h2>Security Notifications</h2></div><span class="section-description">Local records, not outbound messages</span></div>
+      <article class="panel" id="security-notifications-panel"><div class="panel-toolbar"><h3>Recent Critical Notifications</h3><span class="pill critical-pill">CRITICAL</span></div><div class="table-wrapper"><table><thead><tr><th>Generated at (UTC)</th><th>Severity</th><th>Type</th><th>Message</th></tr></thead><tbody id="notifications-table"><tr><td colspan="4">Loading notifications...</td></tr></tbody></table></div><div class="api-line">Notification API: <strong id="notifications-api-status">WAITING</strong></div></article>
+    </section>
+    <section id="incidents" class="section-block"><div class="section-head"><div><span class="eyebrow">05 / INCIDENT RESPONSE</span><h2>Security Incidents</h2></div></div>
+      <article class="panel"><div class="mini-metrics"><div><span>Resolved</span><strong id="incident-resolved-count" class="green">--</strong></div><div><span>Total incidents</span><strong id="incident-total-count">--</strong></div></div><div class="table-wrapper"><table><thead><tr><th>Incident ID</th><th>Severity</th><th>Status</th><th>Created At</th><th>Resolved At</th></tr></thead><tbody id="incidents-body"><tr><td colspan="5">Loading incidents...</td></tr></tbody></table></div><div class="api-line">Incident API: <strong id="incident-api-status">WAITING</strong></div></article>
+    </section>
+
+    <!-- Day 14: Security Event Correlation -->
+    <section id="history" class="section-block"><div class="section-head"><div><span class="eyebrow">06 / FORENSICS</span><h2>Security Event History</h2></div></div>
+      <div class="history-grid"><article class="panel"><div class="mini-metrics"><div><span>Critical events</span><strong id="critical-count" class="red">{{ summary.critical_count }}</strong></div><div><span>Total events</span><strong id="total-events">{{ summary.total_events }}</strong></div></div><div class="table-wrapper"><table><thead><tr><th>Timestamp</th><th>Level</th><th>Message</th></tr></thead><tbody id="events-table">{% for event in summary.events %}<tr><td>{{ event.timestamp }}</td><td class="{{ event.level | lower }}">{{ event.level }}</td><td>{{ event.message }}</td></tr>{% else %}<tr><td colspan="3">No security events available.</td></tr>{% endfor %}</tbody></table></div></article>
+      <article class="panel"><div class="panel-heading"><h3>IDS Availability Events</h3><span class="pill subtle">UPTIME</span></div><div class="mini-metrics"><div><span>Offline</span><strong id="availability-offline-count" class="red">--</strong></div><div><span>Recoveries</span><strong id="availability-recovery-count" class="green">--</strong></div><div><span>Total</span><strong id="availability-total-count">--</strong></div></div><div class="table-wrapper"><table><thead><tr><th>Timestamp</th><th>Event</th><th>Message</th></tr></thead><tbody id="availability-events-body"><tr><td colspan="3">Loading availability events...</td></tr></tbody></table></div><div class="api-line">Availability API: <strong id="availability-api-status">WAITING</strong></div></article></div>
+    </section>
+
+<section id="correlated-incidents" class="section-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">07 / EVENT CORRELATION</span>
+          <h2>Correlated Security Incidents</h2>
+        </div>
+        <span class="section-description">
+          Historical correlation snapshot · not live incident detection
+        </span>
+      </div>
+
+      <article class="panel">
+        <div class="mini-metrics">
+          <div>
+            <span>Total correlated</span>
+            <strong id="correlated-total">--</strong>
+          </div>
+          <div>
+            <span>Critical</span>
+            <strong id="correlated-critical" class="red">--</strong>
+          </div>
+          <div>
+            <span>Warning</span>
+            <strong id="correlated-warning" class="amber">--</strong>
+          </div>
+          <div>
+            <span>Simulated</span>
+            <strong id="correlated-simulated">--</strong>
+          </div>
+        </div>
+
+        <div class="panel-toolbar">
+          <h3>Correlation Results</h3>
+
+          <div class="correlation-filters">
+            <label>
+              <span class="sr-only">Filter by severity</span>
+              <select id="correlated-severity">
+                <option value="ALL">All severities</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="WARNING">Warning</option>
+                <option value="INFO">Info</option>
+              </select>
+            </label>
+
+            <label>
+              <span class="sr-only">Filter by status</span>
+              <select id="correlated-status">
+                <option value="ALL">All statuses</option>
+                <option value="RESTORED">Restored</option>
+                <option value="RECOVERED">Recovered</option>
+                <option value="BLOCKED">Blocked</option>
+                <option value="UNRESOLVED">Unresolved</option>
+                <option value="INCOMPLETE">Incomplete</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Started (UTC)</th>
+                <th>Incident Type</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody id="correlated-incidents-body">
+              <tr>
+                <td colspan="6">Loading correlated incidents...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-line">
+          Correlation API:
+          <strong id="correlated-api-status">WAITING</strong>
+        </div>
+      </article>
+    </section>
+
+
+    <!-- Day 15: Incident Investigation Center -->
+    <section id="incident-investigation" class="section-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">08 / INCIDENT INVESTIGATION</span>
+          <h2>Incident Investigation Center</h2>
+        </div>
+        <span class="section-description">
+          Historical investigation report · read-only analysis
+        </span>
+      </div>
+
+      <article class="panel">
+        <div class="mini-metrics">
+          <div>
+            <span>Total Investigated</span>
+            <strong id="investigation-total">--</strong>
+          </div>
+          <div>
+            <span>Review Required</span>
+            <strong id="investigation-review" class="amber">--</strong>
+          </div>
+          <div>
+            <span>Evidence Linked</span>
+            <strong id="investigation-linked" class="green">--</strong>
+          </div>
+          <div>
+            <span>High Priority</span>
+            <strong id="investigation-high" class="red">--</strong>
+          </div>
+        </div>
+
+        <div class="panel-toolbar">
+          <h3>Investigation Results</h3>
+
+          <div class="correlation-filters">
+            <label>
+              <span class="sr-only">Filter by priority</span>
+              <select id="investigation-priority">
+                <option value="ALL">All priorities</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+              </select>
+            </label>
+
+            <label>
+              <span class="sr-only">Filter by investigation status</span>
+              <select id="investigation-status">
+                <option value="ALL">All investigation statuses</option>
+                <option value="REVIEW_REQUIRED">Review Required</option>
+                <option value="EVIDENCE_LINKED">Evidence Linked</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Incident ID</th>
+                <th>Priority</th>
+                <th>Operational Status</th>
+                <th>Evidence</th>
+                <th>Investigation</th>
+                <th>Findings</th>
+              </tr>
+            </thead>
+            <tbody id="investigation-body">
+              <tr>
+                <td colspan="6">Loading investigations...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-line">
+          Investigation API:
+          <strong id="investigation-api-status">WAITING</strong>
+          <span id="investigation-report-time"></span>
+        </div>
+      </article>
+    </section>
+
+
+    <!-- Day 16: Incident Forensics -->
+    <section id="day16-forensics" class="section-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">09 / INCIDENT FORENSICS</span>
+          <h2>Evidence Verification &amp; Timelines</h2>
+        </div>
+        <span class="section-description">
+          Historical forensic snapshot · read-only
+        </span>
+      </div>
+
+      <article class="panel">
+        <div class="mini-metrics">
+          <div>
+            <span>Total Incidents</span>
+            <strong id="forensics16-total">--</strong>
+          </div>
+          <div>
+            <span>Verified Evidence</span>
+            <strong id="forensics16-evidence" class="green">--</strong>
+          </div>
+          <div>
+            <span>Reconstructed Timelines</span>
+            <strong id="forensics16-timelines" class="green">--</strong>
+          </div>
+          <div>
+            <span>Review Required</span>
+            <strong id="forensics16-review" class="amber">--</strong>
+          </div>
+        </div>
+
+        <div class="panel-toolbar">
+          <h3>Forensic Investigation Results</h3>
+
+          <div class="correlation-filters">
+            <label>
+              <span class="sr-only">Filter forensic status</span>
+              <select id="forensics16-filter">
+                <option value="ALL">All incidents</option>
+                <option value="VERIFIED">Verified</option>
+                <option value="REVIEW_REQUIRED">Review required</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Incident</th>
+                <th>Operational Status</th>
+                <th>Evidence</th>
+                <th>Verification</th>
+                <th>Timeline</th>
+                <th>Duration</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="forensics16-body">
+              <tr>
+                <td colspan="7">Loading forensic report...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-line">
+          Forensics API:
+          <strong id="forensics16-api-status">WAITING</strong>
+          <span id="forensics16-report-time"></span>
+        </div>
+      </article>
+    </section>
+
+
+    <!-- Day 17: SOC Incident Reports -->
+    <section id="day17-reports" class="section-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">10 / SOC INCIDENT REPORTS</span>
+          <h2>Automated Incident Reports</h2>
+        </div>
+        <span class="section-description">
+          Historical reports · PDF export
+        </span>
+      </div>
+
+      <article class="panel">
+        <div class="mini-metrics">
+          <div>
+            <span>Total Reports</span>
+            <strong id="soc17-total">--</strong>
+          </div>
+          <div>
+            <span>PDF Available</span>
+            <strong id="soc17-pdf" class="green">--</strong>
+          </div>
+          <div>
+            <span>Review Required</span>
+            <strong id="soc17-review" class="amber">--</strong>
+          </div>
+        </div>
+
+        <div class="panel-toolbar">
+          <h3>SOC Report Library</h3>
+          <div class="correlation-filters">
+            <label>
+              <span class="sr-only">Filter SOC reports</span>
+              <select id="soc17-filter">
+                <option value="ALL">All reports</option>
+                <option value="REVIEW">Review required</option>
+                <option value="VERIFIED">Verified</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Incident</th>
+                <th>Severity</th>
+                <th>Operational Status</th>
+                <th>Verification</th>
+                <th>Review</th>
+                <th>PDF Report</th>
+              </tr>
+            </thead>
+            <tbody id="soc17-body">
+              <tr>
+                <td colspan="6">Loading SOC reports...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-line">
+          SOC Reports API:
+          <strong id="soc17-api-status">WAITING</strong>
+          <span id="soc17-report-time"></span>
+        </div>
+      </article>
+    </section>
+
+    
+    <!-- Day 18: SOC Analyst Workflow -->
+    <section id="day18-workflow" class="section-block">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">
+            11 / SOC ANALYST WORKFLOW
+          </span>
+          <h2>Analyst Case Management</h2>
+        </div>
+        <span class="section-description">
+          Secure analyst operations · Incident response workflow
+        </span>
+      </div>
+
+      <div class="panel">
+        <div class="mini-metrics">
+          <div>
+            <span>Total Cases</span>
+            <strong id="day18-total">—</strong>
+          </div>
+          <div>
+            <span>New</span>
+            <strong id="day18-new">—</strong>
+          </div>
+          <div>
+            <span>Assigned</span>
+            <strong id="day18-assigned">—</strong>
+          </div>
+          <div>
+            <span>In Review</span>
+            <strong id="day18-review">—</strong>
+          </div>
+          <div>
+            <span>Closed</span>
+            <strong id="day18-closed">—</strong>
+          </div>
+        </div>
+
+        <div class="panel-toolbar">
+          <h3>Analyst Case Registry</h3>
+          <div class="day18-controls">
+            <input
+              id="day18-search"
+              type="search"
+              placeholder="Search incident ID..."
+              aria-label="Search analyst cases"
+            >
+            <select
+              id="day18-filter"
+              aria-label="Filter analyst workflow status"
+            >
+              <option value="ALL">All statuses</option>
+              <option value="NEW">New</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="IN_REVIEW">In Review</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Incident</th>
+                <th>Workflow Status</th>
+                <th>Assigned Analyst</th>
+                <th>Last Updated</th>
+                <th>Audit Trail</th>
+              </tr>
+            </thead>
+            <tbody id="day18-cases-body">
+              <tr>
+                <td colspan="5">
+                  Loading analyst cases...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="api-line">
+          Analyst Workflow API:
+          <strong>/api/day18-analyst-cases</strong>
+          <span id="day18-last-update"></span>
+        </div>
+      </div>
+
+      <div class="panel day18-audit-panel" id="day18-audit-panel" hidden>
+        <div class="panel-heading">
+          <h3 id="day18-audit-title">Incident Audit Trail</h3>
+          <button type="button" id="day18-close-audit">
+            Close
+          </button>
+        </div>
+        <div id="day18-audit-content"></div>
+      </div>
+    </section>
+
+    
+<!-- Day 20: Automated Incident Prioritization -->
+<section id="day20-prioritization" class="section-block">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        12 / AUTOMATED RISK ANALYSIS
+      </span>
+      <h2>Automated Incident Prioritization</h2>
+    </div>
+    <span class="section-description">
+      Explainable risk scoring · Read-only analysis
+    </span>
+  </div>
+
+  <article class="panel">
+
+    <div class="mini-metrics">
+      <div>
+        <span>Total Incidents</span>
+        <strong id="day20-total">—</strong>
+      </div>
+      <div>
+        <span>Critical Priority</span>
+        <strong id="day20-critical">—</strong>
+      </div>
+      <div>
+        <span>High Priority</span>
+        <strong id="day20-high">—</strong>
+      </div>
+      <div>
+        <span>Medium Priority</span>
+        <strong id="day20-medium">—</strong>
+      </div>
+      <div>
+        <span>Low Priority</span>
+        <strong id="day20-low">—</strong>
+      </div>
+    </div>
+
+    <div class="panel-toolbar">
+      <h3>Risk-Based Investigation Queue</h3>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Incident ID</th>
+            <th>Severity</th>
+            <th>Risk Score</th>
+            <th>Priority</th>
+            <th>Incident Type</th>
+            <th>Scoring Explanation</th>
+          </tr>
+        </thead>
+        <tbody id="day20-priority-body">
+          <tr>
+            <td colspan="6">
+              Loading incident priorities...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="api-line">
+      Risk Prioritization API:
+      <strong id="day20-api-status">WAITING</strong>
+      <span id="day20-last-update"></span>
+    </div>
+
+  </article>
+</section>
+
+
+<section id="day21-threat-intelligence" class="section-block">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        13 / THREAT INTELLIGENCE
+      </span>
+      <h2>IOC Monitoring & Correlation</h2>
+    </div>
+    <span class="section-description">
+      Local IOC intelligence · Read-only correlation
+    </span>
+  </div>
+
+  <article class="panel">
+
+    <div class="mini-metrics">
+      <div>
+        <span>IOC Indicators</span>
+        <strong id="day21-indicators">—</strong>
+      </div>
+
+      <div>
+        <span>Log Events</span>
+        <strong id="day21-events">—</strong>
+      </div>
+
+      <div>
+        <span>IOC Matches</span>
+        <strong id="day21-matches">—</strong>
+      </div>
+    </div>
+
+    <div class="panel-toolbar">
+      <h3>Threat Intelligence Correlation Results</h3>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>IOC ID</th>
+            <th>IOC Type</th>
+            <th>Indicator</th>
+            <th>Severity</th>
+            <th>Confidence</th>
+            <th>Threat Type</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+
+        <tbody id="day21-ioc-body">
+          <tr>
+            <td colspan="7">
+              Loading IOC correlation results...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="api-line">
+      IOC Correlation API:
+      <strong id="day21-api-status">WAITING</strong>
+      <span id="day21-last-update"></span>
+    </div>
+
+  </article>
+
+</section>
+
+
+<section id="day22-threat-alerts" class="section-block">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        14 / SOC ALERT INVESTIGATION
+      </span>
+      <h2>Threat Alert Queue</h2>
+    </div>
+
+    <span class="section-description">
+      Automated IOC alert enrichment · Read-only monitoring
+    </span>
+  </div>
+
+  <article class="panel">
+
+    <div class="mini-metrics">
+      <div>
+        <span>Total Alerts</span>
+        <strong id="day22-total-alerts">--</strong>
+      </div>
+
+      <div>
+        <span>Critical</span>
+        <strong id="day22-critical-alerts">--</strong>
+      </div>
+
+      <div>
+        <span>High</span>
+        <strong id="day22-high-alerts">--</strong>
+      </div>
+
+      <div>
+        <span>Medium</span>
+        <strong id="day22-medium-alerts">--</strong>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Alert ID</th>
+            <th>Priority</th>
+            <th>IOC</th>
+            <th>Confidence</th>
+            <th>Threat Type</th>
+            <th>Investigation</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+
+        <tbody id="day22-alerts-body">
+          <tr>
+            <td colspan="7">
+              Loading SOC alerts...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="api-line">
+      Threat Alert API:
+      <strong id="day22-api-status">WAITING</strong>
+      <span id="day22-last-update"></span>
+    </div>
+
+  </article>
+
+</section>
+
+
+
+<section id="day23-investigations" class="dashboard-section">
+
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">
+        15 / SOC ALERT INVESTIGATION
+      </span>
+      <h2>SOC Alert Investigation</h2>
+    </div>
+
+    <span class="section-description">
+      Analyst workflow · Investigation notes · Audit trail
+    </span>
+  </div>
+
+  <article class="panel">
+
+    <div class="mini-metrics">
+      <div>
+        <span>Unreviewed</span>
+        <strong id="day23-unreviewed">--</strong>
+      </div>
+      <div>
+        <span>Investigating</span>
+        <strong id="day23-investigating">--</strong>
+      </div>
+      <div>
+        <span>Confirmed</span>
+        <strong id="day23-confirmed">--</strong>
+      </div>
+      <div>
+        <span>False Positive</span>
+        <strong id="day23-false-positive">--</strong>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Alert ID</th>
+            <th>Priority</th>
+            <th>IOC</th>
+            <th>Status</th>
+            <th>Assigned Analyst</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="day23-investigations-body">
+          <tr>
+            <td colspan="6">
+              Loading investigations...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="day23-investigation-details"
+         class="day23-details"
+         hidden>
+
+      <h3>Selected Investigation</h3>
+
+      <p>
+        Alert:
+        <strong id="day23-selected-alert">--</strong>
+      </p>
+
+      <p>
+        Status:
+        <strong id="day23-selected-status">--</strong>
+      </p>
+
+      <p>
+        Assigned analyst:
+        <strong id="day23-selected-analyst">--</strong>
+      </p>
+
+      <label for="day23-note">
+        Investigation note
+      </label>
+
+      <textarea
+        id="day23-note"
+        rows="3"
+        maxlength="4000"
+        placeholder="Document investigation findings..."
+      ></textarea>
+
+      <div class="day23-actions">
+        <button type="button" id="day23-start">
+          Start Investigation
+        </button>
+
+        <button type="button" id="day23-add-note">
+          Add Note
+        </button>
+
+        <button type="button" id="day23-confirm">
+          Confirm Threat
+        </button>
+
+        <button type="button" id="day23-false-positive-action">
+          Mark False Positive
+        </button>
+      </div>
+
+      <h3>Investigation Audit Trail</h3>
+
+      <div id="day23-audit-trail"
+           aria-live="polite">
+        Select an investigation to view its history.
+      </div>
+
+    </div>
+
+    <div class="api-line">
+      SOC Investigation API:
+      <strong id="day23-api-status">WAITING</strong>
+      <span id="day23-last-update"></span>
+    </div>
+
+    <p id="day23-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+  </article>
+
+</section>
+
+
+    
+<!-- DAY24 THREAT HUNTING TIMELINE -->
+<section id="day24-threat-hunting"
+         class="dashboard-section day24-section">
+
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">
+        16 / SOC THREAT HUNTING
+      </span>
+
+      <h2>Threat Hunting Timeline</h2>
+
+      <p class="muted">
+        Chronological investigation of IOC alerts,
+        correlated security events and original evidence.
+      </p>
+    </div>
+  </div>
+
+  <article class="card day24-card">
+
+    <div class="day24-metrics">
+      <div>
+        <span>Total Events</span>
+        <strong id="day24-total-events">--</strong>
+      </div>
+
+      <div>
+        <span>IOC Alerts</span>
+        <strong id="day24-total-alerts">--</strong>
+      </div>
+
+      <div>
+        <span>Correlated Evidence</span>
+        <strong id="day24-correlated-alerts">--</strong>
+      </div>
+    </div>
+
+    <h3>Investigation Timeline</h3>
+
+    <p class="muted">
+      Only IOC-matched alerts are displayed below.
+      Other security observations are not automatically
+      classified as confirmed attacks.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Severity</th>
+            <th>Alert ID</th>
+            <th>IOC</th>
+            <th>Evidence</th>
+          </tr>
+        </thead>
+
+        <tbody id="day24-timeline-body">
+          <tr>
+            <td colspan="5">
+              Waiting for timeline data...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="api-line">
+      Threat Hunting API:
+      <strong id="day24-api-status">WAITING</strong>
+      <span id="day24-last-update"></span>
+    </div>
+
+    <p id="day24-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+  </article>
+</section>
+<!-- END DAY24 THREAT HUNTING TIMELINE -->
+
+    
+<!-- DAY25 INCIDENT RESPONSE SECTION -->
+<section id="day25-incident-response"
+         class="dashboard-section day25-section">
+
+  <div class="section-header">
+    <div>
+      <span class="eyebrow">
+        17 / SOC INCIDENT RESPONSE
+      </span>
+
+      <h2>Incident Response & Case Management</h2>
+
+      <p class="muted">
+        Manage SOC incident cases, review validated evidence,
+        track investigation decisions and preserve audit history.
+        Incident creation does not imply a confirmed attack.
+      </p>
+    </div>
+  </div>
+
+  <article class="card day25-card">
+
+    <div class="day25-metrics">
+      <div>
+        <span>Total Incidents</span>
+        <strong id="day25-total">--</strong>
+      </div>
+
+      <div>
+        <span>Investigating</span>
+        <strong id="day25-investigating">--</strong>
+      </div>
+
+      <div>
+        <span>Resolved</span>
+        <strong id="day25-resolved">--</strong>
+      </div>
+
+      <div>
+        <span>Closed</span>
+        <strong id="day25-closed">--</strong>
+      </div>
+    </div>
+
+    <h3>Create Incident Case</h3>
+
+    <p class="muted">
+      Select an existing Day22 alert and provide
+      an investigation description.
+    </p>
+
+    <form id="day25-create-form" class="day25-form">
+
+      <label for="day25-alert-select">
+        SOC Alert
+      </label>
+
+      <select id="day25-alert-select"
+              required>
+        <option value="">
+          Loading available alerts...
+        </option>
+      </select>
+
+      <label for="day25-description">
+        Incident Description
+      </label>
+
+      <textarea id="day25-description"
+                maxlength="2000"
+                rows="3"
+                required
+                placeholder="Describe the reason for opening this incident"></textarea>
+
+      <button id="day25-create"
+              type="submit">
+        Create Incident
+      </button>
+
+    </form>
+
+    <h3>Incident Cases</h3>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Case ID</th>
+            <th>Alert</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Verdict</th>
+            <th>Analyst</th>
+          </tr>
+        </thead>
+
+        <tbody id="day25-incidents-body">
+          <tr>
+            <td colspan="6">
+              Waiting for incident data...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Selected Incident</h3>
+
+    <label for="day25-case-select">
+      Incident Case
+    </label>
+
+    <select id="day25-case-select">
+      <option value="">
+        Select an incident
+      </option>
+    </select>
+
+    <div id="day25-case-details"
+         class="day25-details">
+      No incident selected.
+    </div>
+
+    <div class="day25-actions">
+
+      <div>
+        <label for="day25-status-select">
+          Change Status
+        </label>
+
+        <select id="day25-status-select">
+          <option value="INVESTIGATING">
+            INVESTIGATING
+          </option>
+          <option value="RESOLVED">
+            RESOLVED
+          </option>
+          <option value="CLOSED">
+            CLOSED
+          </option>
+        </select>
+
+        <button id="day25-update-status"
+                type="button">
+          Update Status
+        </button>
+      </div>
+
+      <div>
+        <label for="day25-verdict-select">
+          Investigation Verdict
+        </label>
+
+        <select id="day25-verdict-select">
+          <option value="TRUE_POSITIVE">
+            TRUE POSITIVE
+          </option>
+          <option value="FALSE_POSITIVE">
+            FALSE POSITIVE
+          </option>
+          <option value="BENIGN_ACTIVITY">
+            BENIGN ACTIVITY
+          </option>
+        </select>
+
+        <button id="day25-update-verdict"
+                type="button">
+          Update Verdict
+        </button>
+      </div>
+
+    </div>
+
+    <label for="day25-note">
+      Analyst Justification
+    </label>
+
+    <textarea id="day25-note"
+              maxlength="2000"
+              rows="3"
+              placeholder="Required justification for status or verdict changes"></textarea>
+
+    <h3>Attach Evidence</h3>
+
+    <div class="day25-evidence-form">
+
+      <label for="day25-evidence-type">
+        Evidence Type
+      </label>
+
+      <select id="day25-evidence-type">
+        <option value="IOC_ALERT">
+          IOC Alert — Day22
+        </option>
+        <option value="LOG_EVENT">
+          Correlated Log Event — Day24
+        </option>
+      </select>
+
+      <label for="day25-evidence-reference">
+        Evidence Reference ID
+      </label>
+
+      <input id="day25-evidence-reference"
+             maxlength="150"
+             placeholder="ALT-... or EVT-...">
+
+      <label for="day25-evidence-description">
+        Evidence Description
+      </label>
+
+      <textarea id="day25-evidence-description"
+                maxlength="2000"
+                rows="2"></textarea>
+
+      <button id="day25-add-evidence"
+              type="button">
+        Attach Validated Evidence
+      </button>
+
+    </div>
+
+    <h3>Incident Evidence</h3>
+
+    <div id="day25-evidence-list"
+         class="day25-evidence-list">
+      No evidence loaded.
+    </div>
+
+    <h3>Incident Audit Trail</h3>
+
+    <div id="day25-audit-list"
+         class="day25-audit-list">
+      No audit records loaded.
+    </div>
+
+    <div class="api-line">
+      Incident Response API:
+      <strong id="day25-api-status">WAITING</strong>
+      <span id="day25-last-update"></span>
+    </div>
+
+    <p id="day25-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+  </article>
+</section>
+<!-- END DAY25 INCIDENT RESPONSE SECTION -->
+
+<!-- DAY26 SOC INCIDENT REPORTS -->
+<section id="day26-incident-reports"
+         class="dashboard-section day26-section">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        18 / SOC INCIDENT REPORTING
+      </span>
+
+      <h2>Incident Reporting & Evidence Export</h2>
+
+      <p class="muted">
+        Generate incident reports and export verified
+        evidence and audit history.
+      </p>
+    </div>
+  </div>
+
+  <article class="card day26-card">
+
+    <h3>Generate Incident Report</h3>
+
+    <p class="muted">
+      Select an incident case to generate a report.
+    </p>
+
+    <label for="day26-case-select">
+      Incident Case
+    </label>
+
+    <select id="day26-case-select">
+      <option value="">Select an incident...</option>
+    </select>
+
+    <div class="day26-actions">
+
+      <button id="day26-report-json"
+              type="button">
+        Generate JSON Report
+      </button>
+
+      <button id="day26-evidence-csv"
+              type="button">
+        Export Evidence CSV
+      </button>
+
+      <button id="day26-audit-csv"
+              type="button">
+        Export Audit CSV
+      </button>
+
+    </div>
+
+    <h3>Report Preview</h3>
+
+    <pre id="day26-report-preview"
+         class="day26-preview">No report generated.</pre>
+
+    <p id="day26-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+    <p class="muted">
+      Reporting API:
+      <strong id="day26-api-status">WAITING</strong>
+    </p>
+
+  </article>
+
+</section>
+<!-- END DAY26 SOC INCIDENT REPORTS -->
+
+<!-- DAY27 SOC REPORT INTEGRITY -->
+<section id="day27-report-integrity"
+         class="dashboard-section day27-section">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        19 / SOC REPORT INTEGRITY
+      </span>
+
+      <h2>Incident Report Integrity Verification</h2>
+
+      <p class="muted">
+        Verify exported incident reports using
+        SHA-256 hashes and secure file access.
+      </p>
+    </div>
+  </div>
+
+  <article class="card day27-card">
+
+    <h3>Verify Incident Bundle</h3>
+
+    <p class="muted">
+      Enter an incident ID to verify its exported files.
+    </p>
+
+    <label for="day27-case-id">
+      Incident Case ID
+    </label>
+
+    <input
+      id="day27-case-id"
+      type="text"
+      value="INC-CAC40C42F3254074"
+      placeholder="INC-..."
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <div class="day27-actions">
+      <button id="day27-verify-button"
+              type="button">
+        Verify Integrity
+      </button>
+    </div>
+
+    <h3>Verification Result</h3>
+
+    <p id="day27-integrity-status"
+       role="status"
+       aria-live="polite">
+      WAITING FOR VERIFICATION
+    </p>
+
+    <div id="day27-integrity-results">
+      <p class="muted">
+        No verification performed yet.
+      </p>
+    </div>
+
+    <p id="day27-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+    <p class="muted">
+      Integrity API:
+      <strong id="day27-api-status">WAITING</strong>
+    </p>
+
+  </article>
+</section>
+<!-- END DAY27 SOC REPORT INTEGRITY -->
+
+
+<!-- DAY28 DIGITAL SIGNATURE VERIFICATION -->
+<section id="day28-digital-signature"
+         class="dashboard-section day28-section">
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">
+        20 / DIGITAL SIGNATURE VERIFICATION
+      </span>
+
+      <h2>Incident Digital Signature Verification</h2>
+
+      <p class="muted">
+        Verify Ed25519 digital signatures and SHA-256
+        integrity of exported SOC incident bundles.
+      </p>
+    </div>
+  </div>
+
+  <article class="card day28-card">
+
+    <h3>Verify Signed Incident Bundle</h3>
+
+    <p class="muted">
+      Enter an incident ID to verify its authenticity
+      and exported files.
+    </p>
+
+    <label for="day28-case-id">
+      Incident Case ID
+    </label>
+
+    <input
+      id="day28-case-id"
+      type="text"
+      value="INC-CAC40C42F3254074"
+      placeholder="INC-..."
+      autocomplete="off"
+      spellcheck="false"
+    >
+
+    <div class="day28-actions">
+      <button id="day28-verify-button"
+              type="button">
+        Verify Digital Signature
+      </button>
+    </div>
+
+    <h3>Signature Verification Result</h3>
+
+    <p id="day28-signature-status"
+       role="status"
+       aria-live="polite">
+      WAITING FOR VERIFICATION
+    </p>
+
+    <div id="day28-signature-results">
+      <p class="muted">
+        No signature verification performed yet.
+      </p>
+    </div>
+
+    <p id="day28-feedback"
+       role="status"
+       aria-live="polite"></p>
+
+    <p class="muted">
+      Signature API:
+      <strong id="day28-api-status">WAITING</strong>
+    </p>
+
+  </article>
+</section>
+<!-- END DAY28 DIGITAL SIGNATURE VERIFICATION -->
+
+
+
+
+<footer class="footer">ROBOT SOC · Local development environment · Do not expose this dashboard or token-authenticated API publicly without additional hardening.</footer>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='js/day23-investigations.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/day24-threat-hunting.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/day25-incident-response.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/day26-incident-reports.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/day27-report-integrity.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/day28-digital-signature.js') }}" defer></script>
+</body>
+</html>
