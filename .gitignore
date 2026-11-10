@@ -96,3 +96,5 @@ day21/data/
 coverage/
 htmlcov/
 .nyc_output/
+
+*:Zone.Identifier
