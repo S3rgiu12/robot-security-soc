@@ -78,6 +78,14 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
 
+# DAY29_SECURITY_HEADERS
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
 app.register_blueprint(soc_auth_bp)
 
 # DAY19_ANALYST_OPERATIONS_INTEGRATION
