@@ -97,7 +97,7 @@ def add_security_headers(response):
         "frame-ancestors 'none'"
     )
 
-    response.headers["Content-Security-Policy-Report-Only"] = csp_policy
+    response.headers["Content-Security-Policy"] = csp_policy
 
     return response
 
@@ -111,6 +111,9 @@ for directory in (DAY18_DIR, DAY19_DIR):
 
 from analyst_operations_api import analyst_operations_bp
 app.register_blueprint(analyst_operations_bp)
+
+# DAY29_SOC_AUTH_BLUEPRINT_REGISTRATION
+app.register_blueprint(soc_auth_bp)
 
 # Day 20 - Automated Incident Prioritization
 DAY20_DIR = Path(__file__).resolve().parent.parent / "day20"

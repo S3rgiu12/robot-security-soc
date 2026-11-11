@@ -43,11 +43,11 @@ class TestSecurityHeaders(unittest.TestCase):
             "/soc-login"
         )
         self.check_headers(response)
-    def test_csp_report_only(self):
+    def test_csp_enforcement(self):
         response = self.client.get("/soc-login")
 
         csp = response.headers.get(
-            "Content-Security-Policy-Report-Only"
+            "Content-Security-Policy"
         )
 
         self.assertIsNotNone(csp)
