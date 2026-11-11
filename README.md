@@ -6,6 +6,22 @@ A hands-on Cybersecurity and Robotics Security portfolio project
 focused on secure robot telemetry, intrusion detection, incident
 investigation, digital evidence integrity, and SOC monitoring.
 
+## System Architecture
+
+High-level overview of the Robot Security SOC components.
+
+```mermaid
+flowchart TD
+    A["Robot Telemetry"] --> B["TLS 1.3 Communication"]
+    B --> C["IDS & Security Monitoring"]
+    C --> D["Flask SOC Dashboard"]
+    D --> E["Incident Investigation & Reporting"]
+    E --> F["SHA-256 Evidence Integrity"]
+    F --> G["Ed25519 Signature Verification"]
+```
+
+This diagram shows the conceptual security architecture.
+
 ## Technology Stack
 
 - Python 3
