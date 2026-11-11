@@ -84,9 +84,22 @@ def add_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    return response
 
-app.register_blueprint(soc_auth_bp)
+    csp_policy = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'"
+    )
+
+    response.headers["Content-Security-Policy-Report-Only"] = csp_policy
+
+    return response
 
 # DAY19_ANALYST_OPERATIONS_INTEGRATION
 DAY19_DIR = Path(__file__).resolve().parent.parent / "day19"
