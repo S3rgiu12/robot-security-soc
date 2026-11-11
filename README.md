@@ -1,5 +1,7 @@
 # Robot Security SOC
 
+[![Security Tests](https://github.com/S3rgiu12/robot-security-soc/actions/workflows/security-tests.yml/badge.svg)](https://github.com/S3rgiu12/robot-security-soc/actions/workflows/security-tests.yml)
+
 A hands-on Cybersecurity and Robotics Security portfolio project
 focused on secure robot telemetry, intrusion detection, incident
 investigation, digital evidence integrity, and SOC monitoring.
