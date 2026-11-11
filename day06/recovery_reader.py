@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-DAY11_DIR = Path.home() / "cybersecurity/day11"
+DAY11_DIR = Path(__file__).resolve().parent.parent / "day11"
 STATE_FILE = DAY11_DIR / "data/recovery_state.json"
 RECOVERY_LOG = DAY11_DIR / "logs/recovery.log"
 SUPERVISOR_LOG = DAY11_DIR / "logs/recovery_supervisor.log"
