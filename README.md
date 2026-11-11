@@ -97,6 +97,85 @@ security audit or production certification.
 - `day27/` - Report integrity verification
 - `day28/` - Digital signatures and secure verification
 
+
+## Local Setup
+
+The project includes a setup script for initializing SOC analyst authentication.
+
+### 1. Clone the repository
+
+    git clone https://github.com/S3rgiu12/robot-security-soc.git
+    cd robot-security-soc
+
+### 2. Create a Python virtual environment
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+
+### 3. Install dependencies
+
+    python -m pip install -r day06/requirements.txt
+    python -m pip install cryptography==50.0.2
+
+### 4. Initialize SOC authentication
+
+    python setup_soc.py
+
+The setup script:
+- Generates a local Flask secret if one does not exist.
+- Initializes the SQLite analyst authentication database.
+- Prompts for an administrator username and password.
+- Stores passwords using scrypt hashes.
+
+Passwords must contain at least 12 characters.
+
+### 5. Start the SOC dashboard
+
+    python day06/app.py
+
+The dashboard is configured to listen at:
+
+    http://127.0.0.1:5000
+
+Note: Some SOC dashboard features depend on runtime data generated
+by earlier project exercises. Additional local configuration may be
+required for those integrations.
+
+Security note: Authentication databases, local secrets, private keys,
+and generated evidence must never be committed to GitHub.
+
+
+## Running Security Tests
+
+Requirements:
+- Python 3.12
+- pip
+- Linux environment (Ubuntu recommended)
+
+Clone the repository and enter the project directory.
+
+Install the cryptographic dependency:
+
+    python3 -m pip install cryptography==50.0.2
+
+Run the Day 28 security test suite:
+
+    python3 -m unittest discover -s day28/tests -p "test_*.py" -v
+
+The test suite covers:
+- Ed25519 signature verification
+- SHA-256 evidence integrity
+- Modified evidence detection
+- Forged signature rejection
+- Untrusted public key rejection
+- Symbolic link protection
+
+The tests use temporary cryptographic fixtures and do not require
+private signing keys or exported production incident data.
+
+GitHub Actions automatically executes these tests on pushes and
+pull requests targeting the main branch.
+
 ## Security and Privacy
 
 Private keys, environment files, operational databases,
@@ -114,3 +193,27 @@ and environment-specific hardening.
 Sergiu Dumitrasc
 
 Cybersecurity | Robotics Security | Software Development
+
+## Application Screenshots
+
+### SOC Analyst Authentication
+
+The Robot Security SOC includes a dedicated analyst login interface
+with session-based authentication and role-based access control.
+
+![Robot Security SOC Login](docs/screenshots/SOC_Login.png)
+
+### SOC Monitoring Dashboard
+
+The SOC dashboard provides a centralized interface for monitoring
+robot security events, IDS alerts, system availability, and incidents.
+
+![Robot Security SOC Dashboard](docs/screenshots/SOC_Dashboard.png)
+
+### Security Incident Correlation
+
+The SOC provides historical incident correlation, severity
+classification, event timelines, recovery status, and
+traceability to supporting log evidence.
+
+![Robot Security SOC Incident Correlation](docs/screenshots/Detalii_incident.png)
