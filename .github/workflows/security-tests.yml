@@ -1,0 +1,37 @@
+name: Robot Security SOC - Security Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  day28-security-tests:
+    name: Day 28 - Cryptographic Security Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cryptography==50.0.2
+
+      - name: Run Day 28 security tests
+        run: |
+          python -m unittest discover \
+            -s day28/tests \
+            -p "test_*.py" \
+            -v
