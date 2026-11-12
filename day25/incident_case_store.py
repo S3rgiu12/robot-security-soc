@@ -431,6 +431,7 @@ def add_incident_evidence(
     db_path=DEFAULT_DB,
     *,
     log_path=None,
+    security_log_path=None,
 ):
     """Attach only validated SOC evidence and audit the action."""
 
@@ -455,6 +456,7 @@ def add_incident_evidence(
     if evidence_type not in {
         "IOC_ALERT",
         "LOG_EVENT",
+        "IDS_ALERT",
         "INVESTIGATION",
     }:
         raise ValueError("Invalid evidence type")
@@ -462,6 +464,7 @@ def add_incident_evidence(
     expected_sources = {
         "IOC_ALERT": "DAY22",
         "LOG_EVENT": "DAY24",
+        "IDS_ALERT": "IDS_V3",
     }
 
     if evidence_type == "INVESTIGATION":
@@ -503,12 +506,38 @@ def add_incident_evidence(
                 "Cannot add evidence to a closed case"
             )
 
-        validate_evidence_reference(
-            evidence_type=evidence_type,
-            reference_id=reference_id.strip(),
-            incident_alert_id=case["alert_id"],
-            log_path=log_path,
-        )
+        if evidence_type == "IDS_ALERT":
+            from day25.ids_evidence_validator import (
+                validate_ids_alert,
+            )
+
+            validate_ids_alert(
+                reference_id=reference_id.strip(),
+                incident_alert_id=case["alert_id"],
+                log_path=log_path,
+            )
+
+            if security_log_path is None:
+                raise ValueError(
+                    "TLS security log is required for IDS evidence"
+                )
+
+            from day25.ids_tls_correlation import (
+                validate_tls_correlation,
+            )
+
+            validate_tls_correlation(
+                alert_id=reference_id.strip(),
+                alert_log_path=log_path,
+                security_log_path=security_log_path,
+            )
+        else:
+            validate_evidence_reference(
+                evidence_type=evidence_type,
+                reference_id=reference_id.strip(),
+                incident_alert_id=case["alert_id"],
+                log_path=log_path,
+            )
 
         connection.execute(
             """

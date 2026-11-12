@@ -230,6 +230,28 @@ def incident_log_path():
     )
 
 
+def ids_alert_log_path():
+    """Server-controlled IDS V3 critical alert log."""
+    return current_app.config.get(
+        "DAY25_IDS_ALERT_LOG",
+        str(
+            Path(__file__).resolve().parents[1]
+            / "day05/logs/robot_ids_alerts_v3.log"
+        ),
+    )
+
+
+def tls_security_log_path():
+    """Server-controlled TLS security event log."""
+    return current_app.config.get(
+        "DAY25_TLS_SECURITY_LOG",
+        str(
+            Path(__file__).resolve().parents[1]
+            / "day05/logs/robot_security.log"
+        ),
+    )
+
+
 def incident_payload():
     payload = request.get_json(silent=True)
 
@@ -387,7 +409,16 @@ def add_incident_evidence_endpoint(case_id):
             description=description,
             analyst=analyst,
             db_path=database_path(),
-            log_path=incident_log_path(),
+            log_path=(
+                ids_alert_log_path()
+                if evidence_type == "IDS_ALERT"
+                else incident_log_path()
+            ),
+            security_log_path=(
+                tls_security_log_path()
+                if evidence_type == "IDS_ALERT"
+                else None
+            ),
         )
 
         return jsonify({
